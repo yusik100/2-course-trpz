@@ -91,7 +91,7 @@ Type=simple
 User=app
 WorkingDirectory=/opt/mywebapp
 ExecStartPre=/usr/bin/node /opt/mywebapp/migrate.js --dbuser=app_user --dbpass=app_password --dbname=inventory
-ExecStart=/usr/bin/node /opt/mywebapp/app.js --port=8000 --dbuser=app_user --dbpass=app_password --dbname=inventory
+ExecStart=/usr/bin/node /opt/mywebapp/mywebapp.js --port=8000 --dbuser=app_user --dbpass=app_password --dbname=inventory
 Restart=on-failure
 EOF
 
