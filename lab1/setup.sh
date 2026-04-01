@@ -27,7 +27,7 @@ if ! id "teacher" &>/dev/null; then
 fi
 
 if ! id "operator" &>/dev/null; then
-    useradd -m -s /bin/bash operator
+    useradd -m -s /bin/bash -g operator operator
     echo "operator:12345678" | chpasswd
     chage -d 0 operator
 fi
