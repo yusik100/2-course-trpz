@@ -8,6 +8,7 @@ const pool = mysql.createPool({
   user: args.dbuser || "root",
   password: String(args.dbpass || ""),
   database: args.dbname || "inventory",
+  charset: "utf8mb4",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
