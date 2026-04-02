@@ -124,7 +124,7 @@ server {
 EOF
 
 rm -f /etc/nginx/sites-enabled/default
-ln -s /etc/nginx/sites-available/mywebapp /etc/nginx/sites-enabled/
+ln -sf /etc/nginx/sites-available/mywebapp /etc/nginx/sites-enabled/
 systemctl restart nginx
 
 echo "Налаштування прав користувача operator"
