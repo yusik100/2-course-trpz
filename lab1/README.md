@@ -52,7 +52,7 @@ node mywebapp.js --port=8000 --dbuser=<user> --dbpass=<password> --dbname=<datab
 * Рекомендується завантажити debian-12.x.x-amd64-netinst.iso з офіційного архіву образів Debian (версія трошки застаріла) https://cdimage.debian.org/cdimage/archive/
 * Перейдіть за посиланням, знизу у списку папок знайдіть одну з версій 12-ї гілки (наприклад, 12.8.0 або 12.9.0).
 * Зайдіть в цю папку, потім натисніть amd64 -> iso-cd.
-* Там, у самому низу списку файлів, буде лежати debian-12.x.x-amd64-netinst.iso
+* Там, у самому низу списку файлів, буде лежати debian-12.x.x-amd64-netinst.iso (наприклад ось https://cdimage.debian.org/cdimage/archive/12.9.0/amd64/iso-cd/)
 
 ### 3.2. Вимоги до ресурсів віртуальної машини
 * **CPU:** Мінімум 2 ядра.
