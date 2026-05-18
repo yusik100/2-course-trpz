@@ -1,0 +1,114 @@
+python:
+
+докерфайл неідеальний:
+
+FROM python:3.14-slim
+
+WORKDIR /app
+
+# неідеальний докерфайл
+COPY . .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+CMD ["uvicorn", "spaceship.main:app", "--host=0.0.0.0", "--port=8080"]
+
+
+докерфайл оптимізований:
+
+FROM python:3.14-slim
+
+WORKDIR /app
+
+# більш оптимізований варіант докерфайлу
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["uvicorn", "spaceship.main:app", "--host=0.0.0.0", "--port=8080"]
+
+
+код api.py:
+
+from fastapi import APIRouter
+import numpy as np
+
+router = APIRouter()
+
+@router.get('')
+def hello_world() -> dict:
+    return {'msg': 'Hello, World!'}
+
+@router.get('/matrices')
+def multiply_matrices() -> dict:
+    matrix_a = np.random.rand(10, 10)
+    matrix_b = np.random.rand(10, 10)
+    product = np.dot(matrix_a, matrix_b)
+    return {
+        "matrix_a": matrix_a.tolist(),
+        "matrix_b": matrix_b.tolist(),
+        "product": product.tolist(),
+    }
+
+альпін:
+
+FROM python:3.14-alpine
+
+WORKDIR /app
+
+# альпін
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+CMD ["uvicorn", "spaceship.main:app", "--host=0.0.0.0", "--port=8080"]
+
+
+голанг сінгл:
+
+FROM golang:1.22
+
+WORKDIR /app
+
+# голанг сінгл
+COPY . .
+
+RUN go build -o main .
+
+CMD ["./main"]
+
+
+голанг скретч:
+
+FROM golang:1.22 AS builder
+WORKDIR /app
+COPY . .
+
+# голанг скретч
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+
+FROM scratch
+WORKDIR /app
+COPY --from=builder /app/main /main
+
+CMD ["/main"]
+
+
+голанг дістролес:
+
+FROM golang:1.22 AS builder
+WORKDIR /app
+COPY . .
+
+# голанг дістролес
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+
+FROM gcr.io/distroless/static-debian12
+
+COPY --from=builder /app/main /main
+
+CMD ["/main"]
