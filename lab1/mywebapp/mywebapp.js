@@ -122,12 +122,16 @@ app.get("/items/:id", async (req, res) => {
   }
 });
 
-if (process.env.LISTEN_FDS && parseInt(process.env.LISTEN_FDS) > 0) {
-  app.listen({ fd: 3 }, () => {
-    console.log("Сервер mywebapp запущено через systemd socket activation");
-  });
-} else {
-  app.listen(PORT, () => {
-    console.log(`Сервер mywebapp запущено на порту ${PORT}`);
-  });
+if (require.main === module) {
+  if (process.env.LISTEN_FDS && parseInt(process.env.LISTEN_FDS) > 0) {
+    app.listen({ fd: 3 }, () => {
+      console.log("Сервер mywebapp запущено через systemd socket activation");
+    });
+  } else {
+    app.listen(PORT, () => {
+      console.log(`Сервер mywebapp запущено на порту ${PORT}`);
+    });
+  }
 }
+
+module.exports = app;
