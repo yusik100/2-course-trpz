@@ -1,0 +1,65 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ '*' ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Завантаження коду
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Встановлення залежностей
+        working-directory: ./lab1/mywebapp
+        run: npm install
+
+      - name: Аналіз коду (ESLint)
+        working-directory: ./lab1/mywebapp
+        run: npx eslint .
+
+      - name: Аналіз Dockerfile (Hadolint)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./lab1/mywebapp/Dockerfile
+
+      - name: Аналіз shell-скриптів (Shellcheck)
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './lab1'
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Завантаження коду
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Встановлення залежностей
+        working-directory: ./lab1/mywebapp
+        run: npm install
+
+      - name: Запуск тестів з покриттям
+        working-directory: ./lab1/mywebapp
+        run: npm test
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: ./lab1/mywebapp/coverage/
