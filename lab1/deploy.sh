@@ -5,7 +5,7 @@ IMAGE_NAME=$1
 echo "Починаємо розгортання образу: $IMAGE_NAME"
 
 sudo apt-get update
-sudo apt-get install -y docker.io nginx
+sudo apt-get install -y docker.io nginx curl
 
 cat <<EOF | sudo tee /etc/systemd/system/mywebapp.service
 [Unit]
