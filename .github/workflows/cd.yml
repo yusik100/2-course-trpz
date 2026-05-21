@@ -1,0 +1,37 @@
+name: CD Pipeline
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Завантаження коду
+        uses: actions/checkout@v4
+
+      - name: Підготовка змінних
+        run: echo "IMAGE_NAME=ghcr.io/${{ github.repository }}/mywebapp:stable" >> $GITHUB_ENV
+
+      - name: Копіювання скрипта розгортання на target node
+        run: |
+          scp -P 2223 -o StrictHostKeyChecking=no lab1/deploy.sh vboxuser@192.168.0.100:/tmp/deploy.sh
+          ssh -p 2223 -o StrictHostKeyChecking=no vboxuser@192.168.0.100 "chmod +x /tmp/deploy.sh"
+
+      - name: Запуск скрипта розгортання на target node
+        run: |
+          ssh -p 2223 -o StrictHostKeyChecking=no vboxuser@192.168.0.100 "/tmp/deploy.sh ${{ env.IMAGE_NAME }}"
+
+      - name: Верифікація розгортання
+        run: |
+          echo "Перевірка доступності сервісу..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://192.168.0.100)
+          if [ "$HTTP_STATUS" -eq 200 ]; then
+            echo "Верифікація успішна! Код відповіді: $HTTP_STATUS"
+          else
+            echo "Помилка верифікації! Код відповіді: $HTTP_STATUS"
+            exit 1
+          fi
