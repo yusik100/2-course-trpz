@@ -27,8 +27,8 @@ jobs:
 
       - name: Верифікація розгортання
         run: |
-          echo "Перевірка доступності сервісу..."
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://192.168.0.100)
+          echo "Перевірка доступності сервісу на target node..."
+          HTTP_STATUS=$(ssh -p 2223 -o StrictHostKeyChecking=no vboxuser@192.168.0.100 "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1")
           if [ "$HTTP_STATUS" -eq 200 ]; then
             echo "Верифікація успішна! Код відповіді: $HTTP_STATUS"
           else
