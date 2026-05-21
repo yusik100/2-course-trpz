@@ -136,7 +136,7 @@ chmod 440 /etc/sudoers.d/operator
 echo "Блокування дефолтного користувача"
 DEFAULT_USER=$(id -un 1000 2>/dev/null || true)
 if [ -n "$DEFAULT_USER" ] && [ "$DEFAULT_USER" != "student" ]; then
-    usermod -L $DEFAULT_USER
+    usermod -L "$DEFAULT_USER"
     echo "Дефолтного користувача $DEFAULT_USER успішно заблоковано."
 fi
 
