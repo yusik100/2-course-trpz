@@ -17,6 +17,7 @@ After=docker.service
 [Service]
 Restart=always
 ExecStartPre=-/usr/bin/docker rm -f mywebapp-container
+ExecStartPre=/usr/bin/docker pull $IMAGE_NAME
 ExecStart=/usr/bin/docker run --name mywebapp-container -p 3000:8000 $IMAGE_NAME
 ExecStop=/usr/bin/docker stop mywebapp-container
 
