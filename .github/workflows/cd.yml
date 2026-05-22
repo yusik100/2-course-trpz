@@ -28,10 +28,14 @@ jobs:
       - name: Верифікація розгортання
         run: |
           echo "Перевірка доступності сервісу на target node..."
-          HTTP_STATUS=$(ssh -p 2223 -o StrictHostKeyChecking=no vboxuser@192.168.0.100 "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1")
-          if [ "$HTTP_STATUS" -eq 200 ]; then
-            echo "Верифікація успішна! Код відповіді: $HTTP_STATUS"
-          else
-            echo "Помилка верифікації! Код відповіді: $HTTP_STATUS"
-            exit 1
-          fi
+          for i in {1..6}; do
+            HTTP_STATUS=$(ssh -p 2223 -o StrictHostKeyChecking=no vboxuser@192.168.0.100 "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1")
+            if [ "$HTTP_STATUS" -eq 200 ]; then
+              echo "Верифікація успішна! Код відповіді: $HTTP_STATUS"
+              exit 0
+            fi
+            echo "Поки що код $HTTP_STATUS. Додаток запускається, чекаємо 5 секунд..."
+            sleep 5
+          done
+          echo "Помилка верифікації! Додаток не відповів 200."
+          exit 1
