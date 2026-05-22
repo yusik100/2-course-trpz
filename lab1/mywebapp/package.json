@@ -2,9 +2,10 @@
   "name": "mywebapp",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "mywebapp.js",
   "scripts": {
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "start": "node mywebapp.js"
   },
   "keywords": [],
   "author": "",
