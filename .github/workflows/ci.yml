@@ -88,6 +88,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}/mywebapp
           tags: |
+            type=ref,event=pr
             # Для комітів у гілку main:
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=long,enable={{is_default_branch}}

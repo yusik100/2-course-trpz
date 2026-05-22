@@ -39,7 +39,7 @@ app.get("/", (req, res) => {
 
 app.get("/items", async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT id, name FROM items");
+    const [rows] = await pool.kwery("SELECT id, name FROM items");
 
     if (req.accepts("json")) {
       res.json(rows);
