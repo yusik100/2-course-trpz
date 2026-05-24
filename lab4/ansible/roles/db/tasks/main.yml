@@ -1,0 +1,44 @@
+---
+- name: Встановити MariaDB та Python-модулі для Ansible
+  apt:
+    name: 
+      - mariadb-server
+      - python3-pymysql
+    state: present
+    update_cache: yes
+
+- name: Налаштувати MariaDB слухати свій IP
+  lineinfile:
+    path: /etc/mysql/mariadb.conf.d/50-server.cnf
+    regexp: '^bind-address'
+    line: "bind-address = {{ ansible_host }}"
+  notify: Restart MariaDB
+
+- name: Переконатися, що MariaDB запущена
+  systemd:
+    name: mariadb
+    state: started
+    enabled: yes
+
+- name: Створити базу даних mywebapp_db
+  mysql_db:
+    name: mywebapp_db
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Створити користувача БД та дати права
+  mysql_user:
+    name: mywebapp_user
+    password: supersecretpassword
+    priv: 'mywebapp_db.*:ALL'
+    host: '%'
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Створити таблицю inventory
+  mysql_query:
+    login_db: mywebapp_db
+    login_user: mywebapp_user
+    login_password: supersecretpassword
+    login_host: 127.0.0.1
+    query: "CREATE TABLE IF NOT EXISTS inventory (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), quantity INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
