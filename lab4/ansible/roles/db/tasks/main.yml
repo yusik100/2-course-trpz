@@ -38,7 +38,5 @@
 - name: Створити таблицю inventory
   mysql_query:
     login_db: mywebapp_db
-    login_user: mywebapp_user
-    login_password: supersecretpassword
-    login_host: 127.0.0.1
+    login_unix_socket: /run/mysqld/mysqld.sock
     query: "CREATE TABLE IF NOT EXISTS inventory (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), quantity INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
