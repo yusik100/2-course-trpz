@@ -1,0 +1,15 @@
+[Unit]
+Description=Simple Inventory Web App (Node.js)
+After=network.target
+
+[Service]
+User=app
+WorkingDirectory=/opt/webapp
+
+ExecStartPre=/usr/bin/node /opt/webapp/migrate.js --dbhost={{ hostvars['db-node']['internal_ip'] }} --dbuser=mywebapp_user --dbpass=supersecretpassword --dbname=mywebapp_db
+ExecStart=/usr/bin/node mywebapp.js --port={{ app_port }} --dbhost={{ hostvars['db-node']['internal_ip'] }} --dbuser=mywebapp_user --dbpass=supersecretpassword --dbname=mywebapp_db
+
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -128,7 +128,7 @@ if (require.main === module) {
       console.log("Сервер mywebapp запущено через systemd socket activation");
     });
   } else {
-    app.listen(PORT, () => {
+    app.listen(PORT, "127.0.0.1", () => {
       console.log(`Сервер mywebapp запущено на порту ${PORT}`);
     });
   }

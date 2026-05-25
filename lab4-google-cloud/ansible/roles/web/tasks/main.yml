@@ -1,0 +1,85 @@
+---
+- name: Створити системного користувача app
+  user:
+    name: app
+    system: yes
+    shell: /usr/sbin/nologin
+
+- name: Створити користувача operator
+  user:
+    name: operator
+    shell: /bin/bash
+    password: "{{ '12345678' | password_hash('sha512', 'anothersalt') }}"
+
+- name: Налаштувати обмежені права sudo для operator
+  copy:
+    content: |
+      operator ALL=(ALL) NOPASSWD: /bin/systemctl start webapp, /bin/systemctl stop webapp, /bin/systemctl restart webapp, /bin/systemctl status webapp, /bin/systemctl reload nginx
+    dest: /etc/sudoers.d/operator
+    mode: '0440'
+
+- name: Встановити залежності для додавання репозиторію
+  apt:
+    name: [curl, gnupg, ca-certificates]
+    state: present
+    update_cache: yes
+
+- name: Додати ключ NodeSource (надійний метод)
+  apt_key:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    state: present
+    keyring: /etc/apt/keyrings/nodesource.gpg
+
+- name: Додати репозиторій Node.js 20.x
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main"
+    state: present
+    filename: nodesource
+    
+- name: Оновити кеш та встановити Nginx і Node.js
+  apt:
+    name:
+      - nginx
+      - nodejs
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Застосувати шаблон Nginx
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/default
+  notify: Reload Nginx
+
+- name: Створити директорію для застосунку
+  file:
+    path: /opt/webapp
+    state: directory
+    owner: app
+    group: app
+
+- name: Завантажити код застосунку з першої лабораторної
+  copy:
+    src: ../../../../lab1/mywebapp/
+    dest: /opt/webapp/
+    owner: app
+    group: app
+
+- name: Встановити npm залежності
+  npm:
+    path: /opt/webapp
+
+- name: Виправити права на директорію застосунку
+  file:
+    path: /opt/webapp
+    state: directory
+    owner: app
+    group: app
+    recurse: yes
+
+- name: Застосувати шаблон SystemD сервісу для застосунку
+  template:
+    src: webapp.service.j2
+    dest: /etc/systemd/system/webapp.service
+    mode: '0644'
+  notify: Restart WebApp

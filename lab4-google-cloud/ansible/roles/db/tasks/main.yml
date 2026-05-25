@@ -11,7 +11,7 @@
   lineinfile:
     path: /etc/mysql/mariadb.conf.d/50-server.cnf
     regexp: '^bind-address'
-    line: "bind-address = {{ ansible_host }}"
+    line: "bind-address = 0.0.0.0"
   notify: Restart MariaDB
 
 - name: Переконатися, що MariaDB запущена
@@ -31,12 +31,6 @@
     name: mywebapp_user
     password: supersecretpassword
     priv: 'mywebapp_db.*:ALL'
-    host: '%'
+    host: "{{ hostvars['worker-node']['internal_ip'] }}"
     state: present
     login_unix_socket: /run/mysqld/mysqld.sock
-
-- name: Створити таблицю inventory
-  mysql_query:
-    login_db: mywebapp_db
-    login_unix_socket: /run/mysqld/mysqld.sock
-    query: "CREATE TABLE IF NOT EXISTS inventory (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), quantity INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
