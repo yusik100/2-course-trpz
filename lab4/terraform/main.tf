@@ -1,51 +1,50 @@
 terraform {
   required_providers {
     virtualbox = {
-      source = "shekeriev/virtualbox"
-      version = "0.0.4"
+      source  = "terra-farm/virtualbox"
+      version = "0.2.2-alpha.1"
     }
   }
 }
 
-provider "virtualbox" {
-  delay      = 60
-  mintimeout = 5
+resource "virtualbox_vm" "worker" {
+  name      = "lab4-worker"
+  image     = "https://app.vagrantup.com/ubuntu/boxes/jammy64/versions/20240119.0.0/providers/virtualbox.box"
+  cpus      = 1
+  memory    = "1.0 gib"
+  user_data = file("${path.module}/cloud_init.yml")
+
+  network_adapter {
+    type = "nat"
+  }
+
+  network_adapter {
+    type           = "hostonly"
+    host_interface = "VirtualBox Host-Only Ethernet Adapter"
+  }
 }
 
 resource "virtualbox_vm" "db" {
-  count     = 1
-  name      = "db-server"
-  # Використовуємо локальний файл, який лежить у цій же папці
-  image     = "./virtualbox.box" 
-  cpus      = var.vm_cpus
-  memory    = var.vm_memory
+  name      = "lab4-db"
+  image     = "https://app.vagrantup.com/ubuntu/boxes/jammy64/versions/20240119.0.0/providers/virtualbox.box"
+  cpus      = 1
+  memory    = "1.0 gib"
   user_data = file("${path.module}/cloud_init.yml")
 
   network_adapter {
-    type           = "bridged"
-    host_interface = "Qualcomm Atheros AR8131 PCI-E Gigabit Ethernet Controller (NDIS 6.30)"
+    type = "nat"
   }
-}
-
-resource "virtualbox_vm" "worker" {
-  count     = 1
-  name      = "worker-server"
-  # Використовуємо локальний файл
-  image     = "./virtualbox.box"
-  cpus      = var.vm_cpus
-  memory    = var.vm_memory
-  user_data = file("${path.module}/cloud_init.yml")
 
   network_adapter {
-    type           = "bridged"
-    host_interface = "Qualcomm Atheros AR8131 PCI-E Gigabit Ethernet Controller (NDIS 6.30)"
+    type           = "hostonly"
+    host_interface = "VirtualBox Host-Only Ethernet Adapter"
   }
-}
-
-output "db_ip" {
-  value = element(virtualbox_vm.db.*.network_adapter.0.ipv4_address, 1)
 }
 
 output "worker_ip" {
-  value = element(virtualbox_vm.worker.*.network_adapter.0.ipv4_address, 1)
+  value = virtualbox_vm.worker.network_adapter[1].ipv4_address
+}
+
+output "db_ip" {
+  value = virtualbox_vm.db.network_adapter[1].ipv4_address
 }

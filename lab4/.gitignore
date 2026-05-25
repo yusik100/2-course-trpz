@@ -1,20 +1,19 @@
-**/.terraform/
+vagrant_key
+*.pem
+*.rsa
+*.key
 
-*.tfstate
-*.tfstate.*
-
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.lock.hcl
 *.tfvars
-*.tfvars.json
-
-crash.log
-crash.*.log
 
 *.retry
+ansible.cfg
 
-.vscode/
-.idea/
-*.swp
 .DS_Store
 Thumbs.db
+desktop.ini
 
 *.box

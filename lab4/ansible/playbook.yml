@@ -1,18 +1,20 @@
 ---
-- name: Setup Common Infrastructure
+- name: 1. Common Setup
   hosts: all
   become: yes
   roles:
     - common
 
-- name: Setup Database Server
+- name: 2. Database Setup
   hosts: db
   become: yes
   roles:
     - db
 
-- name: Setup Web Application
+- name: 3. Web Application Setup
   hosts: workers
   become: yes
+  vars:
+    app_port: 8000
   roles:
     - web

@@ -3,16 +3,12 @@ server {
     server_name _;
 
     location / {
-        proxy_pass http://127.0.0.1:8000/;
+        proxy_pass http://127.0.0.1:{{ app_port }};
         proxy_set_header Host $host;
-    }
-    
-    location /items {
-        proxy_pass http://127.0.0.1:8000/items;
-        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
     }
 
-    location /health {
-        proxy_pass http://127.0.0.1:8000/health;
+    location /health/ {
+        proxy_pass http://127.0.0.1:{{ app_port }}/health/;
     }
 }
