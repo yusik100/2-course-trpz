@@ -1,32 +1,21 @@
 ---
-- name: Створити користувача ansible
-  user:
-    name: ansible
+- name: Create student user
+  ansible.builtin.user:
+    name: student
     shell: /bin/bash
-    groups: sudo
-    append: yes
 
-- name: Дозволити ansible використовувати sudo без пароля
-  copy:
-    content: "ansible ALL=(ALL) NOPASSWD:ALL"
-    dest: /etc/sudoers.d/ansible
-    mode: '0440'
-
-- name: Створити користувача teacher (пароль 12345678)
-  user:
-    name: teacher
-    shell: /bin/bash
-    groups: sudo
-    append: yes
-    password: "{{ '12345678' | password_hash('sha512') }}"
-
-- name: Створити директорію для gradebook
-  file:
-    path: /home/student
-    state: directory
-    mode: '0755'
-
-- name: Створити файл gradebook із номером варіанту (N=8)
-  copy:
-    content: "8\n"
+- name: Create gradebook file
+  ansible.builtin.copy:
     dest: /home/student/gradebook
+    content: "8\n"
+    owner: student
+    group: student
+    mode: '0644'
+
+- name: Create teacher user
+  ansible.builtin.user:
+    name: teacher
+    password: "{{ '12345678' | password_hash('sha512') }}"
+    groups: sudo
+    append: yes
+    shell: /bin/bash

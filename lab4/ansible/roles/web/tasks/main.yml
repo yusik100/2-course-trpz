@@ -1,104 +1,81 @@
 ---
-- name: Створити системного користувача app
-  user:
-    name: app
-    system: yes
-    shell: /usr/sbin/nologin
-
-- name: Створити користувача operator
-  user:
-    name: operator
-    shell: /bin/bash
-    password: "{{ '12345678' | password_hash('sha512') }}"
-
-- name: Налаштувати обмежені права sudo для operator
-  copy:
-    content: |
-      operator ALL=(ALL) NOPASSWD: /bin/systemctl start webapp, /bin/systemctl stop webapp, /bin/systemctl restart webapp, /bin/systemctl status webapp, /bin/systemctl reload nginx
-    dest: /etc/sudoers.d/operator
-    mode: '0440'
-
-- name: Встановити Nginx та Flask
-  apt:
+- name: Install Nginx, Node.js, npm, git
+  ansible.builtin.apt:
     name:
       - nginx
-      - python3-flask
-      - python3-pymysql
+      - nodejs
+      - npm
+      - git
     state: present
+    update_cache: yes
 
-- name: Застосувати шаблон Nginx
-  template:
-    src: nginx.conf.j2
-    dest: /etc/nginx/sites-available/default
-  notify: Reload Nginx
+- name: Create app user
+  ansible.builtin.user:
+    name: app
+    system: yes
+    shell: /bin/false
 
-- name: Завантажити код застосунку
-  copy:
-    dest: /opt/webapp.py
+- name: Create operator user
+  ansible.builtin.user:
+    name: operator
+    password: "{{ '12345678' | password_hash('sha512') }}"
+    shell: /bin/bash
+
+- name: Setup sudoers for operator
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/operator
+    content: "operator ALL=(ALL) NOPASSWD: /bin/systemctl start mywebapp, /bin/systemctl stop mywebapp, /bin/systemctl restart mywebapp, /bin/systemctl status mywebapp, /bin/systemctl reload nginx"
+    mode: '0440'
+
+- name: Clone app repository
+  ansible.builtin.git:
+    repo: 'https://github.com/yusik100/2-course-trpz.git'
+    dest: /opt/trpz-labs
+    version: main
+    force: yes
+
+- name: Copy app to running directory
+  ansible.builtin.copy:
+    src: /opt/trpz-labs/lab1/mywebapp/
+    dest: /opt/mywebapp/
     owner: app
-    mode: '0644'
-    content: |
-      import argparse, pymysql
-      from flask import Flask, request, jsonify
+    group: app
+    remote_src: yes
 
-      parser = argparse.ArgumentParser()
-      parser.add_argument('--db-host', required=True)
-      parser.add_argument('--db-user', required=True)
-      parser.add_argument('--db-pass', required=True)
-      parser.add_argument('--db-name', required=True)
-      parser.add_argument('--port', type=int, default=8000)
-      args = parser.parse_args()
+- name: Install npm dependencies
+  community.general.npm:
+    path: /opt/mywebapp
 
-      app = Flask(__name__)
+- name: Deploy mywebapp systemd service template
+  ansible.builtin.template:
+    src: mywebapp.service.j2
+    dest: /etc/systemd/system/mywebapp.service
+  notify: restart mywebapp
 
-      def get_db():
-          return pymysql.connect(host=args.db_host, user=args.db_user, password=args.db_pass, database=args.db_name, cursorclass=pymysql.cursors.DictCursor)
+- name: Deploy Nginx configuration
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/mywebapp
+  notify: restart nginx
 
-      @app.route('/health/alive')
-      def alive(): return jsonify(status="alive"), 200
+- name: Enable Nginx site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/mywebapp
+    dest: /etc/nginx/sites-enabled/mywebapp
+    state: link
 
-      @app.route('/health/ready')
-      def ready():
-          try:
-              get_db().ping()
-              return jsonify(status="ready", db="connected"), 200
-          except Exception as e:
-              return jsonify(status="error", details=str(e)), 500
+- name: Remove default Nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: restart nginx
 
-      @app.route('/items', methods=['GET', 'POST'])
-      def items():
-          db = get_db()
-          with db.cursor() as c:
-              if request.method == 'POST':
-                  data = request.json
-                  c.execute("INSERT INTO inventory (name, quantity) VALUES (%s, %s)", (data['name'], data['quantity']))
-                  db.commit()
-                  return jsonify(status="created"), 201
-              else:
-                  c.execute("SELECT id, name FROM inventory")
-                  return jsonify(c.fetchall())
-
-      @app.route('/items/<int:id>', methods=['GET'])
-      def item(id):
-          with get_db().cursor() as c:
-              c.execute("SELECT id, name, quantity, created_at FROM inventory WHERE id=%s", (id,))
-              res = c.fetchone()
-          return jsonify(res) if res else (jsonify(error="not found"), 404)
-
-      if __name__ == '__main__':
-          app.run(host='127.0.0.1', port=args.port)
-
-- name: Створити SystemD сервіс для застосунку
-  copy:
-    content: |
-      [Unit]
-      Description=Simple Inventory Web App
-      After=network.target
-      [Service]
-      User=app
-      ExecStart=/usr/bin/python3 /opt/webapp.py --db-host {{ hostvars['db-node']['ansible_host'] }} --db-user mywebapp_user --db-pass supersecretpassword --db-name mywebapp_db --port {{ app_port }}
-      Restart=always
-      [Install]
-      WantedBy=multi-user.target
-    dest: /etc/systemd/system/webapp.service
-  notify: Restart WebApp
+- name: Ensure services are started
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  loop:
+    - mywebapp
+    - nginx

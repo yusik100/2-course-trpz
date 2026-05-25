@@ -1,26 +1,7 @@
 #cloud-config
-package_update: true
-packages:
-  - virtualbox-guest-utils
-  - net-tools
-
-network:
-  version: 2
-  ethernets:
-    enp0s8:
-      dhcp4: true
-
 users:
   - name: ansible
-    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
-    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
-    ssh_authorized_keys:
-      - ${file("~/.ssh/id_ed25519.pub")}
-
-chpasswd:
-  list: |
-    ansible:12345678
-  expire: False
-
-ssh_pwauth: true
+    ssh-authorized-keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINw3u9xSiLAgkPRQCj2ofHE2W9nHIAy5Fqv3H3pFkf5p djalb@LENOVO-B560
